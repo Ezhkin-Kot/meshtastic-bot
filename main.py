@@ -120,7 +120,7 @@ def on_receive(packet: dict, interface) -> None:
                 parts.append(f"SNR {rx_snr:.1f} dB")
             if rx_rssi is not None:
                 parts.append(f"RSSI {rx_rssi} dBm")
-            signal_str = f" _({', '.join(parts)})_"
+            signal_str = f"\n_({', '.join(parts)})_"
 
         timestamp = datetime.now().strftime("%H:%M:%S")
         safe_name = escape_markdown(long_name)
