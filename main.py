@@ -129,8 +129,8 @@ def on_receive(packet: dict, interface) -> None:
         type_label = "🔒 DM" if is_dm else f"📡 Channel {channel}"
         tg_message = (
             f"*{type_label}* `[{timestamp}]`\n"
-            f"👤 *{safe_name}*:\n"
-            f"{safe_text}{signal_str}"
+            f"👤 `[{safe_name}]`: "
+            f"{safe_text}\n{signal_str}"
         )
 
         log.info("Message routes to topic %s: %s", target_topic, text)
