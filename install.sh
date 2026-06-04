@@ -22,7 +22,7 @@ Type=simple
 User=$CURRENT_USER
 WorkingDirectory=$SCRIPT_DIR
 EnvironmentFile=$SCRIPT_DIR/.env
-ExecStart=$SCRIPT_DIR/venv/bin/python $SCRIPT_DIR/bot.py
+ExecStart=$SCRIPT_DIR/venv/bin/python $SCRIPT_DIR/main.py
 Restart=always
 RestartSec=5
 
