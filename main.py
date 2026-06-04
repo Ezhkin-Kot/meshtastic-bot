@@ -17,10 +17,13 @@ import meshtastic.serial_interface
 from pubsub import pub
 from telegram.error import TelegramError
 from telegram.ext import Application
+from dotenv import load_dotenv
 
 # ---------------------------------------------------------------------------
 # Configuration (loaded from environment variables)
 # ---------------------------------------------------------------------------
+
+load_dotenv()
 
 TELEGRAM_BOT_TOKEN: str = os.environ["TELEGRAM_BOT_TOKEN"]
 TELEGRAM_CHAT_ID: int = int(os.environ["TELEGRAM_CHAT_ID"])
