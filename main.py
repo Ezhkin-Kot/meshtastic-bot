@@ -126,9 +126,9 @@ def on_receive(packet: dict, interface) -> None:
         safe_name = escape_markdown(long_name)
         safe_text = escape_markdown(text)
 
-        type_label = "🔒 DM" if is_dm else f"📡 Channel {channel}"
+        type_label = "👤" if is_dm else f"📡 Channel {channel}:"
         tg_message = (
-            f"*{type_label}* 👤 `{safe_name}`:"
+            f"*{type_label}* `{safe_name}`: "
             f"{safe_text}\n{signal_str}\n`[{timestamp}]`"
         )
 
