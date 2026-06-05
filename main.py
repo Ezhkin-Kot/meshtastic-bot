@@ -33,14 +33,20 @@ RECONNECT_DELAY: int = int(os.environ.get("RECONNECT_DELAY", "15"))
 TOPIC_GENERAL: Optional[int] = (
     int(os.environ.get("TOPIC_GENERAL")) if os.environ.get("TOPIC_GENERAL") else None
 )
-TOPIC_DIRECT: Optional[int] = (
-    int(os.environ.get("TOPIC_DIRECT")) if os.environ.get("TOPIC_DIRECT") else None
+TOPIC_MY_DIRECT: Optional[int] = (
+    int(os.environ.get("TOPIC_MY_DIRECT"))
+    if os.environ.get("TOPIC_MY_DIRECT")
+    else None
+)
+MY_PORTABLE_NODE_ID: str = os.environ.get("MY_PORTABLE_NODE_ID", "").strip()
+TOPIC_OTHER_DIRECT: Optional[int] = (
+    int(os.environ.get("TOPIC_OTHER_DIRECT"))
+    if os.environ.get("TOPIC_OTHER_DIRECT")
+    else None
 )
 TOPIC_SYSTEM: Optional[int] = (
     int(os.environ.get("TOPIC_SYSTEM")) if os.environ.get("TOPIC_SYSTEM") else None
 )
-
-MY_PORTABLE_NODE_ID: str = os.environ.get("MY_PORTABLE_NODE_ID", "").strip()
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -110,10 +116,10 @@ def on_receive(packet: dict, interface) -> None:
                 or not MY_PORTABLE_NODE_ID
                 or from_id == MY_PORTABLE_NODE_ID
             ):
-                target_topic = TOPIC_DIRECT
-                log.info("Received valid DM from target node %s", from_id)
+                target_topic = TOPIC_MY_DIRECT
+                log.info("Received DM from target node %s", from_id)
             else:
-                target_topic = TOPIC_DIRECT
+                target_topic = TOPIC_OTHER_DIRECT
                 log.info("Received DM from another node %s", from_id)
 
         parts = []
