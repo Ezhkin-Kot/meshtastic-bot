@@ -72,13 +72,22 @@ def escape_markdown(text: str) -> str:
 
 def on_receive(packet: dict, interface) -> None:
     try:
+        log.debug("Raw packet received: %s", packet)
+
         decoded = packet.get("decoded", {})
         portnum = decoded.get("portnum", "")
 
-        if portnum != "TEXT_MESSAGE_APP":
+        if portnum != "TEXT_MESSAGE_APP" and portnum != 1:
             return
 
         text: str = decoded.get("text", "").strip()
+
+        if not text and "payload" in decoded:
+            try:
+                text = decoded["payload"].decode("utf-8").strip()
+            except Exception:
+                pass
+
         if not text:
             return
 
@@ -128,7 +137,7 @@ def on_receive(packet: dict, interface) -> None:
                     parts.append("*")
                 else:
                     parts.append(
-                        f"⚡ {hops_travelled} hop" + ("s" if hops_travelled > 1 else "")
+                        f"{hops_travelled} hop" + ("s" if hops_travelled > 1 else "")
                     )
 
         signal_str = f"\n_({', '.join(parts)})_" if parts else ""
