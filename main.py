@@ -83,32 +83,35 @@ def on_receive(packet: dict, interface) -> None:
             return
 
         from_id: str = packet.get("fromId", "unknown")
+        to_id: str = packet.get("toId", "unknown")
         node_info = interface.nodes.get(from_id, {})
         user = node_info.get("user", {})
         long_name: str = user.get("longName") or user.get("shortName") or from_id
 
         # Определение типа сообщения и выбор топика
-        channel = packet.get("channel")
-        # В Meshtastic пакет считается ЛС (Direct Message), если у него установлен флаг или отсутствует номер канала
-        is_dm = packet.get("toId") != "^all" or channel is None
+        # Если toId равен "^all", это гарантированно публичный широковещательный канал
+        if to_id == "^all":
+            is_dm = False
+            # Если поля channel нет в пакете, по умолчанию это 0 (LongFast)
+            channel = packet.get("channel", 0)
+            target_topic = TOPIC_GENERAL
+        else:
+            # Если toId не равен "^all", значит сообщение адресовано конкретно вашей ноде (это ЛС)
+            is_dm = True
+            channel = None
 
-        target_topic = TOPIC_GENERAL
-
-        if is_dm:
-            # Если это ЛС, проверяем, от кого оно
+            # Фильтр по вашей портативной ноде
             if (
                 MY_PORTABLE_NODE_ID == "ALL"
                 or not MY_PORTABLE_NODE_ID
                 or from_id == MY_PORTABLE_NODE_ID
             ):
                 target_topic = TOPIC_DIRECT
-                log.info("Received DM from target node %s", from_id)
+                log.info("Received valid DM from target node %s", from_id)
             else:
-                log.info(
-                    "Received DM from another node %s, skipping or routing to general",
-                    from_id,
-                )
+                # Если ЛС от кого-то другого, все равно шлем в топик для ЛС
                 target_topic = TOPIC_DIRECT
+                log.info("Received DM from another node %s", from_id)
 
         # Формирование строки сигнала
         rx_snr = packet.get("rxSnr")
