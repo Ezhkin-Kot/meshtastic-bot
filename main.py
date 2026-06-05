@@ -88,19 +88,14 @@ def on_receive(packet: dict, interface) -> None:
         user = node_info.get("user", {})
         long_name: str = user.get("longName") or user.get("shortName") or from_id
 
-        # Определение типа сообщения и выбор топика
-        # Если toId равен "^all", это гарантированно публичный широковещательный канал
         if to_id == "^all":
             is_dm = False
-            # Если поля channel нет в пакете, по умолчанию это 0 (LongFast)
             channel = packet.get("channel", 0)
             target_topic = TOPIC_GENERAL
         else:
-            # Если toId не равен "^all", значит сообщение адресовано конкретно вашей ноде (это ЛС)
             is_dm = True
             channel = None
 
-            # Фильтр по вашей портативной ноде
             if (
                 MY_PORTABLE_NODE_ID == "ALL"
                 or not MY_PORTABLE_NODE_ID
@@ -109,21 +104,34 @@ def on_receive(packet: dict, interface) -> None:
                 target_topic = TOPIC_DIRECT
                 log.info("Received valid DM from target node %s", from_id)
             else:
-                # Если ЛС от кого-то другого, все равно шлем в топик для ЛС
                 target_topic = TOPIC_DIRECT
                 log.info("Received DM from another node %s", from_id)
 
-        # Формирование строки сигнала
-        rx_snr = packet.get("rxSnr")
-        rx_rssi = packet.get("rxRssi")
-        signal_str = ""
-        if rx_snr is not None or rx_rssi is not None:
-            parts = []
+        parts = []
+
+        if packet.get("viaMqtt"):
+            parts.append("🌐 MQTT")
+        else:
+            rx_snr = packet.get("rxSnr")
+            rx_rssi = packet.get("rxRssi")
             if rx_snr is not None:
                 parts.append(f"SNR {rx_snr:.1f} dB")
             if rx_rssi is not None:
                 parts.append(f"RSSI {rx_rssi} dBm")
-            signal_str = f"\n_({', '.join(parts)})_"
+
+            hop_limit = packet.get("hopLimit")
+            hop_start = packet.get("hopStart")
+
+            if hop_limit is not None and hop_start is not None:
+                hops_travelled = hop_start - hop_limit
+                if hops_travelled <= 0:
+                    parts.append("*")
+                else:
+                    parts.append(
+                        f"⚡ {hops_travelled} hop" + ("s" if hops_travelled > 1 else "")
+                    )
+
+        signal_str = f"\n_({', '.join(parts)})_" if parts else ""
 
         timestamp = datetime.now().strftime("%H:%M:%S")
         safe_name = escape_markdown(long_name)
@@ -131,8 +139,8 @@ def on_receive(packet: dict, interface) -> None:
 
         type_label = "👤" if is_dm else f"📡 Channel {channel}:"
         tg_message = (
-            f"*{type_label}* `{safe_name}`: "
-            f"{safe_text}\n{signal_str}\n`[{timestamp}]`"
+            f"*{type_label}* `{safe_name}`: {safe_text}\n"
+            f"{signal_str}\n`[{timestamp}]`"
         )
 
         log.info("Message routes to topic %s: %s", target_topic, text)
